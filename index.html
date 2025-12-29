@@ -1,0 +1,1593 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Story Writing Prompt Builder - Full API Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0;
+            min-height: 700px;
+        }
+
+        .form-section {
+            padding: 25px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .output-section {
+            padding: 25px;
+            background: white;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .ai-section {
+            padding: 25px;
+            background: #f0f4f8;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.85rem;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .checkbox-item label {
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .output-container {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            padding: 18px;
+            min-height: 320px;
+            position: relative;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .output-header h3 {
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .copy-btn {
+            padding: 5px 10px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #38a169;
+        }
+
+        .prompt-output {
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #2d3748;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .ai-container {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 18px;
+            min-height: 320px;
+        }
+
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .ai-header h3 {
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .ai-mode-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            background: #f7fafc;
+            border-radius: 5px;
+            padding: 3px;
+        }
+
+        .ai-mode-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #4a5568;
+        }
+
+        .ai-mode-tab.active {
+            background: white;
+            color: #2d3748;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .ai-mode-content {
+            display: none;
+        }
+
+        .ai-mode-content.active {
+            display: block;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .model-selector select {
+            flex: 1;
+            padding: 6px;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .endpoint-config {
+            margin-bottom: 15px;
+        }
+
+        .endpoint-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .endpoint-input-group input {
+            flex: 1;
+            padding: 6px;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .endpoint-input-group button {
+            padding: 6px 12px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .endpoint-presets {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 4px 8px;
+            background: #edf2f7;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .test-prompt-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .test-prompt-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .test-prompt-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-response {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 12px;
+            min-height: 160px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #2d3748;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-disconnected { background: #e53e3e; }
+        .status-connecting { background: #ed8936; }
+        .status-connected { background: #48bb78; }
+
+        .placeholder-text {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .feature-highlight {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .feature-highlight h4 {
+            margin-bottom: 3px;
+            font-size: 0.85rem;
+        }
+
+        .feature-highlight p {
+            font-size: 0.7rem;
+        }
+
+        .ai-highlight {
+            background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .ai-highlight h4 {
+            margin-bottom: 3px;
+            font-size: 0.85rem;
+        }
+
+        .ai-highlight p {
+            font-size: 0.7rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-section, .output-section {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 0.8rem;
+        }
+
+        .success-message {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 0.8rem;
+        }
+
+        .info-message {
+            background: #bee3f8;
+            color: #2b6cb0;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 0.8rem;
+        }
+
+        .api-key-input {
+            position: relative;
+        }
+
+        .api-key-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: #4a5568;
+        }
+
+        .model-list {
+            max-height: 100px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-top: 5px;
+            background: white;
+        }
+
+        .model-item {
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .model-item:hover {
+            background: #f7fafc;
+        }
+
+        .model-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Story Writing Prompt Builder - Full API Support</h1>
+            <p>Generate expert-level prompts and test with local AI models or OpenAI-compatible endpoints</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <div class="feature-highlight">
+                    <h4>Expert-Level Instructions</h4>
+                    <p>Creates comprehensive prompts with professional writing guidance</p>
+                </div>
+                
+                <form id="promptForm">
+                    <div class="form-group">
+                        <label for="genre">Story Genre</label>
+                        <select id="genre" name="genre">
+                            <option value="general">General Fiction</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="scifi">Science Fiction</option>
+                            <option value="mystery">Mystery/Thriller</option>
+                            <option value="romance">Romance</option>
+                            <option value="horror">Horror</option>
+                            <option value="historical">Historical Fiction</option>
+                            <option value="literary">Literary Fiction</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="length">Story Length</label>
+                        <select id="length" name="length">
+                            <option value="short">Short Story (1,000-5,000 words)</option>
+                            <option value="novelette">Novelette (7,500-17,500 words)</option>
+                            <option value="novella">Novella (17,500-40,000 words)</option>
+                            <option value="novel">Novel (40,000+ words)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="perspective">Narrative Perspective</label>
+                        <select id="perspective" name="perspective">
+                            <option value="first">First Person</option>
+                            <option value="third-limited">Third Person Limited</option>
+                            <option value="third-omniscient">Third Person Omniscient</option>
+                            <option value="second">Second Person</option>
+                            <option value="multiple">Multiple POV</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tone">Story Tone</label>
+                        <select id="tone" name="tone">
+                            <option value="dramatic">Dramatic</option>
+                            <option value="humorous">Humorous</option>
+                            <option value="dark">Dark/Gritty</option>
+                            <option value="uplifting">Uplifting</option>
+                            <option value="mysterious">Mysterious</option>
+                            <option value="romantic">Romantic</option>
+                            <option value="satirical">Satirical</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="theme">Central Theme (Optional)</label>
+                        <input type="text" id="theme" name="theme" placeholder="e.g., redemption, coming of age">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Advanced Features:</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="plotTwists" name="features" value="plotTwists" checked>
+                                <label for="plotTwists">Plot Twists</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="settings" name="features" value="settings" checked>
+                                <label for="settings">Settings</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="dialogue" name="features" value="dialogue" checked>
+                                <label for="dialogue">Dialogue</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="pacing" name="features" value="pacing" checked>
+                                <label for="pacing">Pacing</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="characters" name="features" value="characters" checked>
+                                <label for="characters">Characters</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="worldbuilding" name="features" value="worldbuilding">
+                                <label for="worldbuilding">World Building</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="generate-btn">🚀 Generate Expert Prompt</button>
+                </form>
+            </div>
+            
+            <div class="output-section">
+                <div class="output-container">
+                    <div class="output-header">
+                        <h3>Generated AI Prompt</h3>
+                        <button class="copy-btn" id="copyBtn" style="display: none;">📋 Copy</button>
+                    </div>
+                    <div class="prompt-output" id="promptOutput">
+                        <div class="placeholder-text">
+                            Configure your story parameters and click "Generate Expert Prompt" to create a comprehensive AI command.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-section">
+                <div class="ai-highlight">
+                    <h4>🧠 AI Testing Hub</h4>
+                    <p>Test prompts with local models or OpenAI-compatible APIs</p>
+                </div>
+
+                <div class="ai-container">
+                    <div class="ai-header">
+                        <h3>
+                            <span class="status-indicator status-disconnected" id="statusIndicator"></span>
+                            AI Model Testing
+                        </h3>
+                    </div>
+
+                    <div class="ai-mode-tabs">
+                        <button class="ai-mode-tab active" data-mode="webllm">Browser AI</button>
+                        <button class="ai-mode-tab" data-mode="openai">OpenAI API</button>
+                        <button class="ai-mode-tab" data-mode="custom">Custom Endpoint</button>
+                    </div>
+
+                    <!-- WebLLM Mode -->
+                    <div class="ai-mode-content active" id="webllm-mode">
+                        <div class="model-selector">
+                            <select id="webllmModelSelect">
+                                <option value="">Select a model...</option>
+                                <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B (Fast, 2GB)</option>
+                                <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama 3.2 3B (Better, 4GB)</option>
+                                <option value="Phi-3.5-mini-instruct-q4f16_1-MLC">Phi 3.5 Mini (Efficient, 2GB)</option>
+                                <option value="gemma-2-2b-it-q4f16_1-MLC">Gemma 2 2B (Google, 2GB)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- OpenAI Mode -->
+                    <div class="ai-mode-content" id="openai-mode">
+                        <div class="form-group">
+                            <label for="openaiKey">API Key</label>
+                            <div class="api-key-input">
+                                <input type="password" id="openaiKey" placeholder="sk-...">
+                                <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('openaiKey')">👁️</button>
+                            </div>
+                        </div>
+                        <div class="model-selector">
+                            <select id="openaiModelSelect">
+                                <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Custom Endpoint Mode -->
+                    <div class="ai-mode-content" id="custom-mode">
+                        <div class="endpoint-presets">
+                            <button class="preset-btn" data-preset="ollama">Ollama</button>
+                            <button class="preset-btn" data-preset="lmstudio">LM Studio</button>
+                            <button class="preset-btn" data-preset="textgen">Text Generation WebUI</button>
+                            <button class="preset-btn" data-preset="vllm">vLLM</button>
+                        </div>
+                        
+                        <div class="endpoint-config">
+                            <div class="form-group">
+                                <label for="customEndpoint">Base URL</label>
+                                <input type="text" id="customEndpoint" placeholder="http://localhost:11434/v1">
+                            </div>
+                            <div class="form-group">
+                                <label for="customKey">API Key (Optional)</label>
+                                <div class="api-key-input">
+                                    <input type="password" id="customKey" placeholder="Leave empty if not required">
+                                    <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('customKey')">👁️</button>
+                                </div>
+                            </div>
+                            <div class="endpoint-input-group">
+                                <button type="button" id="discoverModelsBtn">🔍 Discover Models</button>
+                            </div>
+                        </div>
+                        
+                        <div class="model-selector">
+                            <select id="customModelSelect">
+                                <option value="">Select or discover models...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="discoveredModels" class="model-list" style="display: none;"></div>
+                    </div>
+
+                    <div id="modelStatus" class="error-message" style="display: none;"></div>
+                    <div id="modelSuccess" class="success-message" style="display: none;"></div>
+                    <div id="modelInfo" class="info-message" style="display: none;"></div>
+                    
+                    <div class="progress-bar" id="progressBar" style="display: none;">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+
+                    <button class="test-prompt-btn" id="testPromptBtn" disabled>
+                        🧪 Test Generated Prompt
+                    </button>
+
+                    <div class="ai-response" id="aiResponse">
+                        <div class="placeholder-text">
+                            Select and configure an AI model to test your generated prompts.
+                            <br><br>
+                            <strong>Browser AI:</strong> Download models locally (2-4GB first time)
+                            <br><strong>OpenAI API:</strong> Use official OpenAI models
+                            <br><strong>Custom Endpoint:</strong> Connect to local servers (Ollama, LM Studio, etc.)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebLLM Library -->
+    <script type="module">
+        import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+
+        class StoryPromptBuilderFullAPI {
+            constructor() {
+                this.form = document.getElementById('promptForm');
+                this.output = document.getElementById('promptOutput');
+                this.copyBtn = document.getElementById('copyBtn');
+                this.testPromptBtn = document.getElementById('testPromptBtn');
+                this.aiResponse = document.getElementById('aiResponse');
+                this.statusIndicator = document.getElementById('statusIndicator');
+                this.modelStatus = document.getElementById('modelStatus');
+                this.modelSuccess = document.getElementById('modelSuccess');
+                this.modelInfo = document.getElementById('modelInfo');
+                this.progressBar = document.getElementById('progressBar');
+                this.progressFill = document.getElementById('progressFill');
+                
+                // AI Mode elements
+                this.modeTabs = document.querySelectorAll('.ai-mode-tab');
+                this.modeContents = document.querySelectorAll('.ai-mode-content');
+                this.webllmModelSelect = document.getElementById('webllmModelSelect');
+                this.openaiModelSelect = document.getElementById('openaiModelSelect');
+                this.openaiKey = document.getElementById('openaiKey');
+                this.customEndpoint = document.getElementById('customEndpoint');
+                this.customKey = document.getElementById('customKey');
+                this.customModelSelect = document.getElementById('customModelSelect');
+                this.discoverModelsBtn = document.getElementById('discoverModelsBtn');
+                this.discoveredModels = document.getElementById('discoveredModels');
+                
+                this.engine = null;
+                this.currentPrompt = '';
+                this.currentMode = 'webllm';
+                
+                this.initializeEventListeners();
+                this.templates = this.initializeTemplates();
+                this.presets = this.initializePresets();
+            }
+
+            initializeEventListeners() {
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                this.copyBtn.addEventListener('click', () => this.copyToClipboard());
+                this.testPromptBtn.addEventListener('click', () => this.testPrompt());
+                
+                // Mode switching
+                this.modeTabs.forEach(tab => {
+                    tab.addEventListener('click', () => this.switchMode(tab.dataset.mode));
+                });
+                
+                // Model selection
+                this.webllmModelSelect.addEventListener('change', () => this.handleWebLLMModelChange());
+                this.openaiKey.addEventListener('input', () => this.validateOpenAIConfig());
+                this.customEndpoint.addEventListener('input', () => this.validateCustomConfig());
+                this.discoverModelsBtn.addEventListener('click', () => this.discoverModels());
+                
+                // Preset buttons
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.applyPreset(btn.dataset.preset));
+                });
+            }
+
+            initializePresets() {
+                return {
+                    ollama: {
+                        baseUrl: 'http://localhost:11434/v1',
+                        apiKey: '',
+                        name: 'Ollama'
+                    },
+                    lmstudio: {
+                        baseUrl: 'http://localhost:1234/v1',
+                        apiKey: '',
+                        name: 'LM Studio'
+                    },
+                    textgen: {
+                        baseUrl: 'http://localhost:5000/v1',
+                        apiKey: '',
+                        name: 'Text Generation WebUI'
+                    },
+                    vllm: {
+                        baseUrl: 'http://localhost:8000/v1',
+                        apiKey: '',
+                        name: 'vLLM'
+                    }
+                };
+            }
+
+            switchMode(mode) {
+                this.currentMode = mode;
+                
+                // Update tabs
+                this.modeTabs.forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.mode === mode);
+                });
+                
+                // Update content
+                this.modeContents.forEach(content => {
+                    content.classList.toggle('active', content.id === `${mode}-mode`);
+                });
+                
+                // Reset status
+                this.updateStatus('disconnected');
+                this.testPromptBtn.disabled = true;
+                this.hideMessages();
+                
+                // Validate current configuration
+                this.validateCurrentMode();
+            }
+
+            validateCurrentMode() {
+                switch (this.currentMode) {
+                    case 'webllm':
+                        if (this.webllmModelSelect.value) {
+                            this.handleWebLLMModelChange();
+                        }
+                        break;
+                    case 'openai':
+                        this.validateOpenAIConfig();
+                        break;
+                    case 'custom':
+                        this.validateCustomConfig();
+                        break;
+                }
+            }
+
+            validateOpenAIConfig() {
+                const hasKey = this.openaiKey.value.trim().length > 0;
+                const hasModel = this.openaiModelSelect.value.length > 0;
+                
+                if (hasKey && hasModel) {
+                    this.updateStatus('connected');
+                    this.testPromptBtn.disabled = false;
+                    this.showSuccess('OpenAI configuration ready');
+                } else {
+                    this.updateStatus('disconnected');
+                    this.testPromptBtn.disabled = true;
+                    if (!hasKey) {
+                        this.showInfo('Enter your OpenAI API key to continue');
+                    }
+                }
+            }
+
+            validateCustomConfig() {
+                const hasEndpoint = this.customEndpoint.value.trim().length > 0;
+                const hasModel = this.customModelSelect.value.length > 0;
+                
+                if (hasEndpoint && hasModel) {
+                    this.updateStatus('connected');
+                    this.testPromptBtn.disabled = false;
+                    this.showSuccess('Custom endpoint configuration ready');
+                } else {
+                    this.updateStatus('disconnected');
+                    this.testPromptBtn.disabled = true;
+                    if (!hasEndpoint) {
+                        this.showInfo('Enter endpoint URL and discover models');
+                    }
+                }
+            }
+
+            applyPreset(presetName) {
+                const preset = this.presets[presetName];
+                if (preset) {
+                    this.customEndpoint.value = preset.baseUrl;
+                    this.customKey.value = preset.apiKey;
+                    this.showInfo(`Applied ${preset.name} preset. Click "Discover Models" to load available models.`);
+                }
+            }
+
+            async discoverModels() {
+                const endpoint = this.customEndpoint.value.trim();
+                if (!endpoint) {
+                    this.showError('Please enter an endpoint URL first');
+                    return;
+                }
+
+                try {
+                    this.discoverModelsBtn.disabled = true;
+                    this.discoverModelsBtn.innerHTML = '<span class="loading-spinner"></span>Discovering...';
+                    this.hideMessages();
+
+                    const modelsUrl = endpoint.replace(/\/+$/, '') + '/models';
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    const apiKey = this.customKey.value.trim();
+                    if (apiKey) {
+                        headers['Authorization'] = `Bearer ${apiKey}`;
+                    }
+
+                    const response = await fetch(modelsUrl, { headers });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.data && Array.isArray(data.data)) {
+                        this.populateDiscoveredModels(data.data);
+                        this.showSuccess(`Found ${data.data.length} models`);
+                    } else {
+                        throw new Error('Invalid response format');
+                    }
+
+                } catch (error) {
+                    console.error('Error discovering models:', error);
+                    this.showError(`Failed to discover models: ${error.message}`);
+                } finally {
+                    this.discoverModelsBtn.disabled = false;
+                    this.discoverModelsBtn.innerHTML = '🔍 Discover Models';
+                }
+            }
+
+            populateDiscoveredModels(models) {
+                // Clear existing options
+                this.customModelSelect.innerHTML = '<option value="">Select a model...</option>';
+                this.discoveredModels.innerHTML = '';
+
+                if (models.length === 0) {
+                    this.showInfo('No models found at this endpoint');
+                    return;
+                }
+
+                // Populate dropdown
+                models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.id;
+                    option.textContent = model.id;
+                    this.customModelSelect.appendChild(option);
+                });
+
+                // Populate list for display
+                models.forEach(model => {
+                    const item = document.createElement('div');
+                    item.className = 'model-item';
+                    item.textContent = model.id;
+                    item.addEventListener('click', () => {
+                        this.customModelSelect.value = model.id;
+                        this.discoveredModels.style.display = 'none';
+                        this.validateCustomConfig();
+                    });
+                    this.discoveredModels.appendChild(item);
+                });
+
+                this.discoveredModels.style.display = 'block';
+            }
+
+            async handleWebLLMModelChange() {
+                const selectedModel = this.webllmModelSelect.value;
+                if (!selectedModel) {
+                    this.updateStatus('disconnected');
+                    this.testPromptBtn.disabled = true;
+                    return;
+                }
+
+                try {
+                    this.updateStatus('connecting');
+                    this.showProgress(true);
+                    this.hideMessages();
+                    
+                    // Create engine with progress callback
+                    this.engine = await CreateMLCEngine(selectedModel, {
+                        initProgressCallback: (progress) => {
+                            this.updateProgress(progress.progress * 100);
+                            if (progress.text) {
+                                this.showInfo(`Loading: ${progress.text}`);
+                            }
+                        }
+                    });
+
+                    this.updateStatus('connected');
+                    this.showProgress(false);
+                    this.testPromptBtn.disabled = false;
+                    this.showSuccess(`Model "${selectedModel}" loaded successfully!`);
+                    
+                } catch (error) {
+                    console.error('Error loading model:', error);
+                    this.updateStatus('disconnected');
+                    this.showProgress(false);
+                    this.testPromptBtn.disabled = true;
+                    this.showError(`Failed to load model: ${error.message}`);
+                }
+            }
+
+            async testPrompt() {
+                if (!this.currentPrompt) {
+                    this.showError('Please generate a prompt first.');
+                    return;
+                }
+
+                try {
+                    this.testPromptBtn.disabled = true;
+                    this.testPromptBtn.innerHTML = '<span class="loading-spinner"></span>Generating Story...';
+                    this.aiResponse.textContent = 'AI is writing your story...';
+
+                    const testPrompt = this.createTestPrompt();
+                    let response;
+
+                    switch (this.currentMode) {
+                        case 'webllm':
+                            response = await this.testWithWebLLM(testPrompt);
+                            break;
+                        case 'openai':
+                            response = await this.testWithOpenAI(testPrompt);
+                            break;
+                        case 'custom':
+                            response = await this.testWithCustomEndpoint(testPrompt);
+                            break;
+                        default:
+                            throw new Error('Invalid AI mode');
+                    }
+
+                    this.aiResponse.textContent = response;
+                    
+                } catch (error) {
+                    console.error('Error generating story:', error);
+                    this.aiResponse.textContent = `Error generating story: ${error.message}`;
+                } finally {
+                    this.testPromptBtn.disabled = false;
+                    this.testPromptBtn.innerHTML = '🧪 Test Generated Prompt';
+                }
+            }
+
+            async testWithWebLLM(prompt) {
+                if (!this.engine) {
+                    throw new Error('WebLLM model not loaded');
+                }
+
+                const response = await this.engine.chat.completions.create({
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are an expert storyteller. Follow the user's instructions to write a compelling story opening."
+                        },
+                        {
+                            role: "user", 
+                            content: prompt
+                        }
+                    ],
+                    max_tokens: 500,
+                    temperature: 0.8
+                });
+
+                return response.choices[0].message.content;
+            }
+
+            async testWithOpenAI(prompt) {
+                const apiKey = this.openaiKey.value.trim();
+                const model = this.openaiModelSelect.value;
+
+                if (!apiKey || !model) {
+                    throw new Error('OpenAI API key and model are required');
+                }
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are an expert storyteller. Follow the user's instructions to write a compelling story opening."
+                            },
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        max_tokens: 500,
+                        temperature: 0.8
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+
+            async testWithCustomEndpoint(prompt) {
+                const endpoint = this.customEndpoint.value.trim();
+                const model = this.customModelSelect.value;
+                const apiKey = this.customKey.value.trim();
+
+                if (!endpoint || !model) {
+                    throw new Error('Endpoint URL and model are required');
+                }
+
+                const chatUrl = endpoint.replace(/\/+$/, '') + '/chat/completions';
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (apiKey) {
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                }
+
+                const response = await fetch(chatUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are an expert storyteller. Follow the user's instructions to write a compelling story opening."
+                            },
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        max_tokens: 500,
+                        temperature: 0.8
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+
+            createTestPrompt() {
+                const formData = new FormData(this.form);
+                const genre = formData.get('genre');
+                const tone = formData.get('tone');
+                const theme = formData.get('theme');
+                
+                let testPrompt = `Write the opening 2-3 paragraphs of a ${this.getGenreDescription(genre)} story with a ${tone} tone.`;
+                
+                if (theme) {
+                    testPrompt += ` The central theme should be ${theme}.`;
+                }
+                
+                testPrompt += ` Create compelling characters, vivid setting, and immediate engagement. Focus on showing rather than telling.`;
+                
+                return testPrompt;
+            }
+
+            updateStatus(status) {
+                this.statusIndicator.className = `status-indicator status-${status}`;
+            }
+
+            showProgress(show) {
+                this.progressBar.style.display = show ? 'block' : 'none';
+                if (!show) {
+                    this.progressFill.style.width = '0%';
+                }
+            }
+
+            updateProgress(percentage) {
+                this.progressFill.style.width = `${percentage}%`;
+            }
+
+            showError(message) {
+                this.hideMessages();
+                this.modelStatus.textContent = message;
+                this.modelStatus.style.display = 'block';
+            }
+
+            showSuccess(message) {
+                this.hideMessages();
+                this.modelSuccess.textContent = message;
+                this.modelSuccess.style.display = 'block';
+            }
+
+            showInfo(message) {
+                this.hideMessages();
+                this.modelInfo.textContent = message;
+                this.modelInfo.style.display = 'block';
+            }
+
+            hideMessages() {
+                this.modelStatus.style.display = 'none';
+                this.modelSuccess.style.display = 'none';
+                this.modelInfo.style.display = 'none';
+            }
+
+            initializeTemplates() {
+                return {
+                    plotTwists: {
+                        general: [
+                            "The protagonist's trusted ally has been working against them all along",
+                            "What seemed like the main conflict was actually a distraction from the real threat",
+                            "The protagonist discovers they have a hidden connection to the antagonist",
+                            "A character presumed dead returns at a crucial moment",
+                            "The solution to the main problem creates an even bigger problem"
+                        ],
+                        fantasy: [
+                            "The magical artifact the hero seeks is actually cursed or corrupted",
+                            "The prophecy was misinterpreted or deliberately altered",
+                            "The mentor figure is revealed to be the true dark lord",
+                            "Magic comes with a terrible, hidden cost that's just now being revealed",
+                            "The different realms/worlds are actually the same place in different time periods"
+                        ],
+                        scifi: [
+                            "The AI/computer system has been manipulating events from the beginning",
+                            "What they thought was the future is actually a simulation or virtual reality",
+                            "The alien threat is actually future humans trying to prevent a catastrophe",
+                            "Time travel has created a paradox that's unraveling reality",
+                            "The technology they're using is actually alien in origin and has its own agenda"
+                        ],
+                        mystery: [
+                            "The detective/investigator is actually connected to the crime",
+                            "The victim faked their own death/disappearance",
+                            "Multiple seemingly unrelated cases are actually connected",
+                            "The evidence was planted by someone trying to frame an innocent person",
+                            "The crime was committed for completely different reasons than initially suspected"
+                        ]
+                    },
+                    
+                    settings: {
+                        urban: "A bustling metropolis where glass towers pierce the sky, their surfaces reflecting the constant flow of humanity below. Streets pulse with the rhythm of traffic, street vendors, and the underground rumble of subway trains. Neon signs cast colorful shadows in narrow alleyways where secrets hide in plain sight.",
+                        
+                        rural: "Rolling hills stretch endlessly under an expansive sky, dotted with weathered farmhouses and ancient oak trees. The air carries the scent of wildflowers and fresh earth, while distant church bells mark the passage of time in a place where everyone knows their neighbor's story.",
+                        
+                        fantasy: "An enchanted realm where crystalline spires twist toward twin moons, and bioluminescent forests whisper ancient secrets. Magic crackles in the air like static electricity, and creatures of legend roam freely through landscapes that shift between breathtaking beauty and terrifying danger.",
+                        
+                        scifi: "A space station orbiting a dying star, its corridors humming with the constant thrum of life support systems. Holographic displays flicker with data streams while artificial gravity keeps inhabitants grounded in a world where 'up' and 'down' are merely suggestions.",
+                        
+                        historical: "Cobblestone streets wind between half-timbered buildings, their windows glowing with candlelight as the scent of woodsmoke and fresh bread drifts from chimneys. Horse-drawn carriages clatter past while merchants hawk their wares in a marketplace that's been the heart of the community for centuries."
+                    },
+                    
+                    dialogue: {
+                        conflict: '"You don\'t understand," she said, her voice barely above a whisper. "If I tell you the truth, everything changes. Everything we\'ve built together... it all falls apart."',
+                        
+                        revelation: '"The funny thing about secrets," he said, leaning back in his chair, "is that they have a way of revealing themselves when you least expect it. And this one? This one\'s been waiting twenty years to come out."',
+                        
+                        tension: '"We both know why you\'re really here," she said without looking up from her coffee. "The question is whether you\'re brave enough to admit it."',
+                        
+                        emotional: '"I used to think courage meant not being afraid," he said, staring out at the storm. "Now I know it means being terrified and doing what\'s right anyway."'
+                    },
+                    
+                    pacing: {
+                        opening: "Start with immediate action or compelling dialogue. Establish the protagonist's normal world quickly, then introduce the inciting incident within the first 10-15% of your story.",
+                        
+                        middle: "Escalate conflicts progressively. Each scene should either advance the plot or develop character. Use the 'yes, but' or 'no, and' principle - if something goes right for your protagonist, add a complication.",
+                        
+                        climax: "Build to the climax through a series of increasingly intense obstacles. The final confrontation should test everything your protagonist has learned and force them to make their most difficult choice.",
+                        
+                        resolution: "Provide emotional satisfaction while tying up loose ends. Show how your protagonist has changed, but leave some questions for readers to ponder."
+                    }
+                };
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                const formData = new FormData(this.form);
+                const prompt = this.generatePrompt(formData);
+                this.currentPrompt = prompt;
+                this.displayPrompt(prompt);
+            }
+
+            generatePrompt(formData) {
+                const genre = formData.get('genre');
+                const length = formData.get('length');
+                const perspective = formData.get('perspective');
+                const tone = formData.get('tone');
+                const theme = formData.get('theme');
+                const features = formData.getAll('features');
+
+                let prompt = `# EXPERT STORY WRITING COMMAND
+
+You are an expert storyteller tasked with creating a compelling ${this.getGenreDescription(genre)} story. Follow these comprehensive guidelines to craft a professional-quality narrative.
+
+## STORY SPECIFICATIONS
+- **Genre**: ${this.getGenreDescription(genre)}
+- **Length**: ${this.getLengthDescription(length)}
+- **Perspective**: ${this.getPerspectiveDescription(perspective)}
+- **Tone**: ${this.getToneDescription(tone)}`;
+
+                if (theme) {
+                    prompt += `\n- **Central Theme**: ${theme}`;
+                }
+
+                prompt += `\n\n## CORE WRITING PRINCIPLES
+
+### Structure Requirements
+1. **Opening Hook**: Begin with immediate engagement - action, compelling dialogue, or intriguing situation
+2. **Three-Act Structure**: Setup (25%), Confrontation (50%), Resolution (25%)
+3. **Scene-Sequel Pattern**: Each scene must have goal, conflict, disaster followed by reaction, dilemma, decision
+4. **Rising Action**: Escalate conflicts progressively with each chapter/section
+5. **Satisfying Resolution**: Address all major plot threads and character arcs
+
+### Character Development Mandates
+- Create multi-dimensional protagonists with clear motivations, flaws, and growth arcs
+- Establish compelling antagonists with understandable (if not sympathetic) motivations
+- Use character actions and dialogue to reveal personality rather than exposition
+- Ensure each major character has a distinct voice and speech pattern
+- Show character change through actions, not just internal monologue`;
+
+                if (features.includes('characters')) {
+                    prompt += `\n\n### ADVANCED CHARACTER TECHNIQUES
+- **Character Arc Mapping**: Plan how each major character changes from beginning to end
+- **Motivation Hierarchy**: Establish surface wants vs. deeper needs for each character
+- **Backstory Integration**: Weave character history naturally into present action
+- **Relationship Dynamics**: Create complex, evolving relationships between characters
+- **Internal Conflict**: Give protagonists internal struggles that mirror external conflicts`;
+                }
+
+                if (features.includes('dialogue')) {
+                    prompt += `\n\n### DIALOGUE MASTERY
+Each conversation must serve multiple purposes: advance plot, reveal character, create tension.
+
+**Example Techniques:**
+- **Subtext**: Characters say one thing but mean another
+- **Conflict-Driven**: Every dialogue should contain some form of tension
+- **Voice Distinction**: Each character should have unique speech patterns
+- **Realistic Flow**: Include interruptions, incomplete thoughts, natural rhythms
+
+**Sample Dialogue Styles:**
+${this.templates.dialogue.conflict}
+
+${this.templates.dialogue.revelation}
+
+**Dialogue Guidelines:**
+- Avoid exposition dumps in conversation
+- Use action beats to break up long speeches
+- Make every line count - cut unnecessary pleasantries
+- Read dialogue aloud to test naturalness`;
+                }
+
+                if (features.includes('settings')) {
+                    prompt += `\n\n### IMMERSIVE SETTING CREATION
+Settings should function as characters in your story, influencing mood and plot.
+
+**Setting Description Examples:**
+${this.getSettingExample(genre)}
+
+**Setting Integration Techniques:**
+- Use sensory details beyond just visual (sounds, smells, textures)
+- Show how environment affects character behavior and emotions
+- Make setting relevant to plot - it should influence or reflect story events
+- Avoid info-dumping descriptions - weave details into action
+- Use setting to create atmosphere and foreshadow events`;
+                }
+
+                if (features.includes('pacing')) {
+                    prompt += `\n\n### PACING MASTERY
+Control story rhythm through sentence structure, scene length, and tension management.
+
+**Pacing Guidelines by Section:**
+- **Opening (First 10%)**: ${this.templates.pacing.opening}
+- **Development (10-75%)**: ${this.templates.pacing.middle}
+- **Climax (75-90%)**: ${this.templates.pacing.climax}
+- **Resolution (90-100%)**: ${this.templates.pacing.resolution}
+
+**Pacing Techniques:**
+- Vary sentence length: short for tension, longer for reflection
+- Use white space and paragraph breaks for dramatic effect
+- Alternate between action scenes and quieter character moments
+- End chapters/sections with hooks or cliffhangers
+- Control information release to maintain reader engagement`;
+                }
+
+                if (features.includes('plotTwists')) {
+                    prompt += `\n\n### PLOT TWIST INTEGRATION
+Incorporate unexpected but logical plot developments that recontextualize earlier events.
+
+**Potential Plot Twist Ideas for ${this.getGenreDescription(genre)}:**`;
+                    
+                    const twists = this.templates.plotTwists[genre] || this.templates.plotTwists.general;
+                    twists.forEach(twist => {
+                        prompt += `\n- ${twist}`;
+                    });
+
+                    prompt += `\n\n**Plot Twist Guidelines:**
+- Foreshadow twists subtly without telegraphing them
+- Ensure twists feel inevitable in hindsight
+- Use misdirection to guide reader assumptions
+- Make twists serve character development, not just shock value
+- Plant clues that support the twist throughout the story`;
+                }
+
+                if (features.includes('worldbuilding')) {
+                    prompt += `\n\n### WORLD BUILDING EXCELLENCE
+Create a believable, consistent world that supports your narrative.
+
+**World Building Elements:**
+- **Physical Laws**: Establish rules for how your world works (magic systems, technology, physics)
+- **Social Structure**: Define government, class systems, cultural norms
+- **History**: Create backstory that influences current events
+- **Geography**: Design locations that affect plot and character movement
+- **Culture**: Develop customs, beliefs, languages that feel authentic
+- **Economy**: Understand how people make living and trade
+
+**Integration Techniques:**
+- Reveal world details through character actions and observations
+- Make world rules consistent throughout the story
+- Use world elements to create conflict and drive plot
+- Avoid exposition dumps - show don't tell world details`;
+                }
+
+                prompt += `\n\n## WRITING EXECUTION COMMANDS
+
+### Style Requirements
+- **Show Don't Tell**: Demonstrate character emotions and world details through action and dialogue
+- **Active Voice**: Use active construction for dynamic, engaging prose
+- **Specific Details**: Choose concrete, specific nouns and verbs over generic ones
+- **Sensory Engagement**: Include details that appeal to all five senses
+- **Varied Sentence Structure**: Mix short, punchy sentences with longer, flowing ones
+
+### Quality Checkpoints
+1. **Opening Pages**: Hook reader immediately with compelling situation or character voice
+2. **Chapter Endings**: End each section with tension, questions, or forward momentum
+3. **Character Consistency**: Ensure character actions align with established personality
+4. **Plot Logic**: Verify all story events follow logically from established rules
+5. **Emotional Resonance**: Every scene should evoke some emotional response
+
+### Final Polish Requirements
+- **Read Aloud**: Test dialogue and prose rhythm by reading sections aloud
+- **Consistency Check**: Verify character names, timeline, world rules remain consistent
+- **Tension Maintenance**: Ensure each scene contains some form of conflict or tension
+- **Theme Integration**: Weave central themes naturally throughout without preaching
+
+## EXECUTION DIRECTIVE
+Begin writing immediately. Start with a compelling opening that establishes character, setting, and conflict within the first few paragraphs. Focus on creating an immersive experience that draws readers into your story world from the very first sentence.
+
+Remember: Great stories are rewritten, not just written. Plan for multiple drafts and revisions to achieve professional quality.`;
+
+                return prompt;
+            }
+
+            getGenreDescription(genre) {
+                const descriptions = {
+                    general: 'General Fiction',
+                    fantasy: 'Fantasy',
+                    scifi: 'Science Fiction',
+                    mystery: 'Mystery/Thriller',
+                    romance: 'Romance',
+                    horror: 'Horror',
+                    historical: 'Historical Fiction',
+                    literary: 'Literary Fiction'
+                };
+                return descriptions[genre] || 'General Fiction';
+            }
+
+            getLengthDescription(length) {
+                const descriptions = {
+                    short: 'Short Story (1,000-5,000 words)',
+                    novelette: 'Novelette (7,500-17,500 words)',
+                    novella: 'Novella (17,500-40,000 words)',
+                    novel: 'Novel (40,000+ words)'
+                };
+                return descriptions[length] || 'Short Story';
+            }
+
+            getPerspectiveDescription(perspective) {
+                const descriptions = {
+                    first: 'First Person - intimate, personal narrative voice',
+                    'third-limited': 'Third Person Limited - focused through one character\'s perspective',
+                    'third-omniscient': 'Third Person Omniscient - all-knowing narrator with access to multiple viewpoints',
+                    second: 'Second Person - direct address to reader ("You do this...")',
+                    multiple: 'Multiple POV - alternating between different character perspectives'
+                };
+                return descriptions[perspective] || 'Third Person Limited';
+            }
+
+            getToneDescription(tone) {
+                const descriptions = {
+                    dramatic: 'Dramatic - serious, emotionally intense',
+                    humorous: 'Humorous - light-hearted, comedic elements',
+                    dark: 'Dark/Gritty - serious themes, realistic consequences',
+                    uplifting: 'Uplifting - hopeful, inspiring',
+                    mysterious: 'Mysterious - suspenseful, enigmatic',
+                    romantic: 'Romantic - focus on relationships and emotional connections',
+                    satirical: 'Satirical - using humor to critique society or human nature'
+                };
+                return descriptions[tone] || 'Dramatic';
+            }
+
+            getSettingExample(genre) {
+                if (genre === 'fantasy') return this.templates.settings.fantasy;
+                if (genre === 'scifi') return this.templates.settings.scifi;
+                if (genre === 'historical') return this.templates.settings.historical;
+                return this.templates.settings.urban;
+            }
+
+            displayPrompt(prompt) {
+                this.output.textContent = prompt;
+                this.copyBtn.style.display = 'block';
+            }
+
+            async copyToClipboard() {
+                try {
+                    await navigator.clipboard.writeText(this.output.textContent);
+                    const originalText = this.copyBtn.textContent;
+                    this.copyBtn.textContent = '✅ Copied!';
+                    this.copyBtn.style.background = '#48bb78';
+                    
+                    setTimeout(() => {
+                        this.copyBtn.textContent = originalText;
+                        this.copyBtn.style.background = '#48bb78';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = this.output.textContent;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    this.copyBtn.textContent = '✅ Copied!';
+                    setTimeout(() => {
+                        this.copyBtn.textContent = '📋 Copy';
+                    }, 2000);
+                }
+            }
+        }
+
+        // Global function for API key visibility toggle
+        window.toggleApiKeyVisibility = function(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new StoryPromptBuilderFullAPI();
+        });
+    </script>
+</body>
+</html>
