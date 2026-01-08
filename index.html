@@ -1242,6 +1242,7 @@
                                     <option value="society">Individual vs Society</option>
                                     <option value="time">Time and Memory</option>
                                     <option value="hope">Hope in Darkness</option>
+                                    <option value="custom">Custom...</option>
                                 </select>
                                 <input type="text" id="customTheme" name="customTheme" placeholder="Or enter custom theme..." class="form-input" style="margin-top: var(--spacing-sm); display: none;">
                             </div>
@@ -1841,6 +1842,7 @@
                     this.customThemeInput.focus();
                 } else {
                     this.customThemeInput.style.display = 'none';
+                    this.customThemeInput.value = '';
                 }
             }
 
