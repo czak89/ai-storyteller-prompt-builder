@@ -1348,14 +1348,14 @@
                             <span>Disconnected</span>
                         </div>
 
-                        <div class="tabs">
-                            <button class="tab active" data-mode="webllm">Browser AI</button>
-                            <button class="tab" data-mode="openai">OpenAI API</button>
-                            <button class="tab" data-mode="custom">Custom Endpoint</button>
+                        <div class="tabs" role="tablist" aria-label="AI testing modes">
+                            <button class="tab active" id="mode-tab-webllm" role="tab" aria-selected="true" aria-controls="webllm-mode" tabindex="0" data-mode="webllm">Browser AI</button>
+                            <button class="tab" id="mode-tab-openai" role="tab" aria-selected="false" aria-controls="openai-mode" tabindex="-1" data-mode="openai">OpenAI API</button>
+                            <button class="tab" id="mode-tab-custom" role="tab" aria-selected="false" aria-controls="custom-mode" tabindex="-1" data-mode="custom">Custom Endpoint</button>
                         </div>
 
                         <!-- WebLLM Mode -->
-                        <div class="tab-content active" id="webllm-mode">
+                        <div class="tab-content active" id="webllm-mode" role="tabpanel" aria-labelledby="mode-tab-webllm" aria-hidden="false">
                             <div class="form-group">
                                 <label for="webllmModelSelect" class="form-label">Select Model</label>
                                 <select id="webllmModelSelect" class="form-select">
@@ -1369,12 +1369,12 @@
                         </div>
 
                         <!-- OpenAI Mode -->
-                        <div class="tab-content" id="openai-mode">
+                        <div class="tab-content" id="openai-mode" role="tabpanel" aria-labelledby="mode-tab-openai" aria-hidden="true">
                             <div class="form-group">
                                 <label for="openaiKey" class="form-label">API Key</label>
                                 <div class="api-key-container">
                                     <input type="password" id="openaiKey" placeholder="sk-..." class="form-input">
-                                    <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('openaiKey')">👁️</button>
+                                    <button type="button" class="api-key-toggle" aria-label="Show API key" onclick="toggleApiKeyVisibility('openaiKey')">👁️</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1389,7 +1389,7 @@
                         </div>
 
                         <!-- Custom Endpoint Mode -->
-                        <div class="tab-content" id="custom-mode">
+                        <div class="tab-content" id="custom-mode" role="tabpanel" aria-labelledby="mode-tab-custom" aria-hidden="true">
                             <div class="preset-grid">
                                 <button class="preset-btn" data-preset="ollama">Ollama</button>
                                 <button class="preset-btn" data-preset="lmstudio">LM Studio</button>
@@ -1406,7 +1406,7 @@
                                 <label for="customKey" class="form-label">API Key (Optional)</label>
                                 <div class="api-key-container">
                                     <input type="password" id="customKey" placeholder="Leave empty if not required" class="form-input">
-                                    <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('customKey')">👁️</button>
+                                    <button type="button" class="api-key-toggle" aria-label="Show API key" onclick="toggleApiKeyVisibility('customKey')">👁️</button>
                                 </div>
                             </div>
                             
@@ -1466,13 +1466,13 @@
                         <p class="panel-subtitle">Improve prompts and extend stories with AI</p>
                     </div>
                     <div class="panel-content">
-                        <div class="tabs">
-                            <button class="tab active" data-enhancement="prompt">Prompt Enhancement</button>
-                            <button class="tab" data-enhancement="story">Story Extension</button>
+                        <div class="tabs" role="tablist" aria-label="Enhancement modes">
+                            <button class="tab active" id="enhancement-tab-prompt" role="tab" aria-selected="true" aria-controls="prompt-enhancement" tabindex="0" data-enhancement="prompt">Prompt Enhancement</button>
+                            <button class="tab" id="enhancement-tab-story" role="tab" aria-selected="false" aria-controls="story-extension" tabindex="-1" data-enhancement="story">Story Extension</button>
                         </div>
 
                         <!-- Prompt Enhancement -->
-                        <div class="tab-content active" id="prompt-enhancement">
+                        <div class="tab-content active" id="prompt-enhancement" role="tabpanel" aria-labelledby="enhancement-tab-prompt" aria-hidden="false">
                             <div class="button-group">
                                 <button class="btn btn-secondary" id="analyzePromptBtn" disabled>
                                     🔍 Analyze Prompt
@@ -1498,7 +1498,7 @@
                         </div>
 
                         <!-- Story Extension -->
-                        <div class="tab-content" id="story-extension">
+                        <div class="tab-content" id="story-extension" role="tabpanel" aria-labelledby="enhancement-tab-story" aria-hidden="true">
                             <div class="form-group">
                                 <label for="storyInput" class="form-label">Your Story</label>
                                 <textarea class="story-input" id="storyInput" placeholder="Paste your existing story here to extend or fix continuity errors..."></textarea>
@@ -1583,7 +1583,7 @@
                 
                 // AI mode elements
                 this.modeTabs = document.querySelectorAll('.tab[data-mode]');
-                this.modeContents = document.querySelectorAll('.tab-content');
+                this.modeContents = document.querySelectorAll('.tab-content[id$="-mode"]');
                 this.webllmModelSelect = document.getElementById('webllmModelSelect');
                 this.openaiModelSelect = document.getElementById('openaiModelSelect');
                 this.openaiKey = document.getElementById('openaiKey');
@@ -1595,7 +1595,7 @@
                 
                 // Enhancement elements
                 this.enhancementTabs = document.querySelectorAll('.tab[data-enhancement]');
-                this.enhancementContents = document.querySelectorAll('.tab-content');
+                this.enhancementContents = document.querySelectorAll('.tab-content[id$="-enhancement"]');
                 this.analyzePromptBtn = document.getElementById('analyzePromptBtn');
                 this.improvePromptBtn = document.getElementById('improvePromptBtn');
                 this.promptEnhancementResult = document.getElementById('promptEnhancementResult');
@@ -1851,12 +1851,17 @@
                 
                 // Update tabs
                 this.modeTabs.forEach(tab => {
-                    tab.classList.toggle('active', tab.dataset.mode === mode);
+                    const isActive = tab.dataset.mode === mode;
+                    tab.classList.toggle('active', isActive);
+                    tab.setAttribute('aria-selected', isActive.toString());
+                    tab.setAttribute('tabindex', isActive ? '0' : '-1');
                 });
                 
                 // Update content
                 this.modeContents.forEach(content => {
-                    content.classList.toggle('active', content.id === `${mode}-mode`);
+                    const isActive = content.id === `${mode}-mode`;
+                    content.classList.toggle('active', isActive);
+                    content.setAttribute('aria-hidden', (!isActive).toString());
                 });
                 
                 // Reset status
@@ -1872,12 +1877,17 @@
             switchEnhancementMode(mode) {
                 // Update tabs
                 this.enhancementTabs.forEach(tab => {
-                    tab.classList.toggle('active', tab.dataset.enhancement === mode);
+                    const isActive = tab.dataset.enhancement === mode;
+                    tab.classList.toggle('active', isActive);
+                    tab.setAttribute('aria-selected', isActive.toString());
+                    tab.setAttribute('tabindex', isActive ? '0' : '-1');
                 });
                 
                 // Update content
                 this.enhancementContents.forEach(content => {
-                    content.classList.toggle('active', content.id === `${mode}-enhancement`);
+                    const isActive = content.id === `${mode}-enhancement`;
+                    content.classList.toggle('active', isActive);
+                    content.setAttribute('aria-hidden', (!isActive).toString());
                 });
                 
                 // Update button states
@@ -2828,9 +2838,11 @@ Remember: Great stories are rewritten, not just written. Plan for multiple draft
             if (input.type === 'password') {
                 input.type = 'text';
                 button.textContent = '🙈';
+                button.setAttribute('aria-label', 'Hide API key');
             } else {
                 input.type = 'password';
                 button.textContent = '👁️';
+                button.setAttribute('aria-label', 'Show API key');
             }
         };
 
