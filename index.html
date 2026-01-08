@@ -264,6 +264,12 @@
             font-weight: 400;
         }
 
+        .action-helper {
+            margin-top: var(--spacing-sm);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
         .panel-content {
             padding: var(--spacing-lg);
             height: calc(100% - 80px);
@@ -1435,6 +1441,7 @@
                         <button class="btn btn-primary btn-lg" id="testPromptBtn" disabled>
                             🧪 Test Generated Prompt
                         </button>
+                        <p class="action-helper" id="aiActionHelper" role="status" aria-live="polite"></p>
 
                         <div class="content-area" style="margin-top: var(--spacing-md);">
                             <div class="content-header">
@@ -1481,6 +1488,7 @@
                                     ⚡ Improve Prompt
                                 </button>
                             </div>
+                            <p class="action-helper enhancement-action-helper" role="status" aria-live="polite"></p>
                             <div class="content-area">
                                 <div class="content-header">
                                     <h3 class="content-title">Enhancement Results</h3>
@@ -1511,6 +1519,7 @@
                                     🔧 Fix Continuity
                                 </button>
                             </div>
+                            <p class="action-helper enhancement-action-helper" role="status" aria-live="polite"></p>
                             <div class="content-area">
                                 <div class="content-header">
                                     <h3 class="content-title">Story Enhancement</h3>
@@ -1548,6 +1557,7 @@
                 this.engine = null;
                 this.currentPrompt = '';
                 this.currentMode = 'webllm';
+                this.currentEnhancementMode = 'prompt';
                 
                 // Initialize UI state
                 this.updateEnhancementButtons();
@@ -1576,6 +1586,7 @@
                 // AI elements
                 this.statusIndicator = document.getElementById('statusIndicator');
                 this.testPromptBtn = document.getElementById('testPromptBtn');
+                this.aiActionHelper = document.getElementById('aiActionHelper');
                 this.aiResponse = document.getElementById('aiResponse');
                 this.progressContainer = document.getElementById('progressContainer');
                 this.progressFill = document.getElementById('progressFill');
@@ -1599,6 +1610,7 @@
                 this.analyzePromptBtn = document.getElementById('analyzePromptBtn');
                 this.improvePromptBtn = document.getElementById('improvePromptBtn');
                 this.promptEnhancementResult = document.getElementById('promptEnhancementResult');
+                this.enhancementActionHelpers = document.querySelectorAll('.enhancement-action-helper');
                 this.storyInput = document.getElementById('storyInput');
                 this.extendStoryBtn = document.getElementById('extendStoryBtn');
                 this.fixContinuityBtn = document.getElementById('fixContinuityBtn');
@@ -1889,6 +1901,8 @@
                     content.classList.toggle('active', isActive);
                     content.setAttribute('aria-hidden', (!isActive).toString());
                 });
+
+                this.currentEnhancementMode = mode;
                 
                 // Update button states
                 this.updateEnhancementButtons();
@@ -1918,6 +1932,8 @@
                         this.validateCustomConfig();
                         break;
                 }
+
+                this.updateActionHelpers();
             }
 
             validateOpenAIConfig() {
@@ -1965,6 +1981,103 @@
                 this.improvePromptBtn.disabled = !hasPrompt || !hasAI;
                 this.extendStoryBtn.disabled = !hasStory || !hasAI;
                 this.fixContinuityBtn.disabled = !hasStory || !hasAI;
+                this.updateActionHelpers();
+            }
+
+            updateActionHelpers() {
+                if (this.aiActionHelper) {
+                    this.aiActionHelper.textContent = this.getTestPromptHelperText();
+                }
+
+                if (this.enhancementActionHelpers) {
+                    const helperText = this.getEnhancementHelperText();
+                    this.enhancementActionHelpers.forEach((helper) => {
+                        helper.textContent = helperText;
+                    });
+                }
+            }
+
+            getTestPromptHelperText() {
+                if (!this.isAIReady()) {
+                    return this.getAIRequirementText();
+                }
+
+                if (!this.currentPrompt.length) {
+                    return 'Generate a prompt to enable AI testing.';
+                }
+
+                return 'Ready to test the generated prompt.';
+            }
+
+            getEnhancementHelperText() {
+                const requirements = [];
+                const hasPrompt = this.currentPrompt.length > 0;
+                const hasStory = this.storyInput.value.trim().length > 0;
+
+                if (!this.isAIReady()) {
+                    requirements.push(this.getAIRequirementText());
+                }
+
+                if (this.currentEnhancementMode === 'prompt' && !hasPrompt) {
+                    requirements.push('Generate a prompt to enable enhancement tools.');
+                }
+
+                if (this.currentEnhancementMode === 'story' && !hasStory) {
+                    requirements.push('Add story text to enable story tools.');
+                }
+
+                if (!requirements.length) {
+                    return this.currentEnhancementMode === 'prompt'
+                        ? 'Ready to analyze or improve your prompt.'
+                        : 'Ready to extend or fix your story.';
+                }
+
+                return requirements.join(' ');
+            }
+
+            getAIRequirementText() {
+                switch (this.currentMode) {
+                    case 'webllm': {
+                        const hasModel = this.webllmModelSelect.value.length > 0;
+                        if (!hasModel) {
+                            return 'Select a WebLLM model to enable AI actions.';
+                        }
+                        if (!this.engine) {
+                            return 'Load the selected WebLLM model to enable AI actions.';
+                        }
+                        return 'WebLLM model ready.';
+                    }
+                    case 'openai': {
+                        const hasKey = this.openaiKey.value.trim().length > 0;
+                        const hasModel = this.openaiModelSelect.value.length > 0;
+                        if (!hasKey && !hasModel) {
+                            return 'Add your OpenAI API key and select a model to enable AI actions.';
+                        }
+                        if (!hasKey) {
+                            return 'Enter your OpenAI API key to enable AI actions.';
+                        }
+                        if (!hasModel) {
+                            return 'Select an OpenAI model to enable AI actions.';
+                        }
+                        return 'OpenAI model ready.';
+                    }
+                    case 'custom': {
+                        const hasEndpoint = this.customEndpoint.value.trim().length > 0;
+                        const hasModel = this.customModelSelect.value.length > 0;
+                        if (!hasEndpoint && !hasModel) {
+                            return 'Enter a base URL and select a model to enable AI actions.';
+                        }
+                        if (!hasEndpoint) {
+                            return 'Enter a base URL to enable AI actions.';
+                        }
+                        if (!hasModel) {
+                            return 'Select a custom model to enable AI actions.';
+                        }
+                        return 'Custom model ready.';
+                    }
+                    default:
+                        return 'Select an AI model to enable actions.';
+                }
             }
 
             validateStoryInput() {
