@@ -225,6 +225,55 @@
             min-height: 800px;
         }
 
+        .workflow-status {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .workflow-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .workflow-status h2 {
+            font-size: 1rem;
+        }
+
+        .workflow-next-step {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .workflow-checklist {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--spacing-sm);
+            margin: 0;
+            padding: 0;
+        }
+
+        .workflow-check-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .workflow-check-item.is-ready {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
         /* Enhanced Panel Design */
         .panel {
             background: var(--bg-primary);
@@ -1134,6 +1183,13 @@
         </header>
         
         <main class="main-container">
+            <section class="workflow-status" aria-live="polite">
+                <div class="workflow-status-header">
+                    <h2>🧭 Workflow Status</h2>
+                    <p class="workflow-next-step" id="workflowNextStep">Next step: configure your story prompt.</p>
+                </div>
+                <ul class="workflow-checklist" id="workflowChecklist"></ul>
+            </section>
             <div class="panels-grid">
                 <!-- Story Configuration Panel -->
                 <div class="panel fade-in">
@@ -1380,7 +1436,7 @@
                                 <label for="openaiKey" class="form-label">API Key</label>
                                 <div class="api-key-container">
                                     <input type="password" id="openaiKey" placeholder="sk-..." class="form-input">
-                                    <button type="button" class="api-key-toggle" aria-label="Show API key" onclick="toggleApiKeyVisibility('openaiKey')">👁️</button>
+                                    <button type="button" class="api-key-toggle" aria-label="Show API key" data-toggle-target="openaiKey">👁️</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1412,7 +1468,7 @@
                                 <label for="customKey" class="form-label">API Key (Optional)</label>
                                 <div class="api-key-container">
                                     <input type="password" id="customKey" placeholder="Leave empty if not required" class="form-input">
-                                    <button type="button" class="api-key-toggle" aria-label="Show API key" onclick="toggleApiKeyVisibility('customKey')">👁️</button>
+                                    <button type="button" class="api-key-toggle" aria-label="Show API key" data-toggle-target="customKey">👁️</button>
                                 </div>
                             </div>
                             
@@ -1475,7 +1531,7 @@
                     <div class="panel-content">
                         <div class="tabs" role="tablist" aria-label="Enhancement modes">
                             <button class="tab active" id="enhancement-tab-prompt" role="tab" aria-selected="true" aria-controls="prompt-enhancement" tabindex="0" data-enhancement="prompt">Prompt Enhancement</button>
-                            <button class="tab" id="enhancement-tab-story" role="tab" aria-selected="false" aria-controls="story-extension" tabindex="-1" data-enhancement="story">Story Extension</button>
+                            <button class="tab" id="enhancement-tab-story" role="tab" aria-selected="false" aria-controls="story-enhancement" tabindex="-1" data-enhancement="story">Story Extension</button>
                         </div>
 
                         <!-- Prompt Enhancement -->
@@ -1506,7 +1562,7 @@
                         </div>
 
                         <!-- Story Extension -->
-                        <div class="tab-content" id="story-extension" role="tabpanel" aria-labelledby="enhancement-tab-story" aria-hidden="true">
+                        <div class="tab-content" id="story-enhancement" role="tabpanel" aria-labelledby="enhancement-tab-story" aria-hidden="true">
                             <div class="form-group">
                                 <label for="storyInput" class="form-label">Your Story</label>
                                 <textarea class="story-input" id="storyInput" placeholder="Paste your existing story here to extend or fix continuity errors..."></textarea>
@@ -1591,6 +1647,8 @@
                 this.progressContainer = document.getElementById('progressContainer');
                 this.progressFill = document.getElementById('progressFill');
                 this.modelMessages = document.getElementById('modelMessages');
+                this.workflowChecklist = document.getElementById('workflowChecklist');
+                this.workflowNextStep = document.getElementById('workflowNextStep');
                 
                 // AI mode elements
                 this.modeTabs = document.querySelectorAll('.tab[data-mode]');
@@ -1682,10 +1740,17 @@
                 this.modeTabs.forEach(tab => {
                     tab.addEventListener('click', () => this.switchMode(tab.dataset.mode));
                 });
+                this.initializeTabKeyboardNavigation(this.modeTabs, (mode) => this.switchMode(mode), 'mode');
                 
                 // Enhancement events
                 this.enhancementTabs.forEach(tab => {
                     tab.addEventListener('click', () => this.switchEnhancementMode(tab.dataset.enhancement));
+                });
+                this.initializeTabKeyboardNavigation(this.enhancementTabs, (mode) => this.switchEnhancementMode(mode), 'enhancement');
+
+                // API key visibility events
+                document.querySelectorAll('.api-key-toggle').forEach((button) => {
+                    button.addEventListener('click', () => this.toggleApiKeyVisibility(button.dataset.toggleTarget));
                 });
                 
                 // Model events
@@ -1705,6 +1770,72 @@
                 document.querySelectorAll('.preset-btn').forEach(btn => {
                     btn.addEventListener('click', () => this.applyPreset(btn.dataset.preset));
                 });
+
+                // Keyboard shortcuts
+                this.form.addEventListener('keydown', (event) => {
+                    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                        event.preventDefault();
+                        this.form.requestSubmit();
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (!(event.ctrlKey || event.metaKey) || event.key !== 'Enter') {
+                        return;
+                    }
+
+                    const isTypingContext = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName);
+                    if (!isTypingContext || event.target === this.storyInput) {
+                        if (!this.testPromptBtn.disabled) {
+                            event.preventDefault();
+                            this.testPrompt();
+                        }
+                    }
+                });
+            }
+
+            initializeTabKeyboardNavigation(tabs, onSwitch, dataKey) {
+                const tabArray = Array.from(tabs);
+                tabArray.forEach((tab, index) => {
+                    tab.addEventListener('keydown', (event) => {
+                        const firstIndex = 0;
+                        const lastIndex = tabArray.length - 1;
+                        let nextIndex = null;
+
+                        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                            nextIndex = index === lastIndex ? firstIndex : index + 1;
+                        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                            nextIndex = index === firstIndex ? lastIndex : index - 1;
+                        } else if (event.key === 'Home') {
+                            nextIndex = firstIndex;
+                        } else if (event.key === 'End') {
+                            nextIndex = lastIndex;
+                        }
+
+                        if (nextIndex === null) {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        const nextTab = tabArray[nextIndex];
+                        onSwitch(nextTab.dataset[dataKey]);
+                        nextTab.focus();
+                    });
+                });
+            }
+
+            toggleApiKeyVisibility(inputId) {
+                const input = document.getElementById(inputId);
+                const button = document.querySelector(`[data-toggle-target="${inputId}"]`);
+
+                if (!input || !button) {
+                    return;
+                }
+
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                button.textContent = isPassword ? '🙈' : '👁️';
+                button.setAttribute('aria-label', isPassword ? 'Hide API key' : 'Show API key');
             }
 
             initializeSubgenres() {
@@ -1995,6 +2126,53 @@
                         helper.textContent = helperText;
                     });
                 }
+
+                this.updateWorkflowStatus();
+            }
+
+            updateWorkflowStatus() {
+                if (!this.workflowChecklist || !this.workflowNextStep) {
+                    return;
+                }
+
+                const checks = this.getWorkflowChecks();
+                this.workflowChecklist.textContent = '';
+
+                checks.forEach((check) => {
+                    const item = document.createElement('li');
+                    item.className = `workflow-check-item ${check.ready ? 'is-ready' : ''}`.trim();
+                    item.textContent = `${check.ready ? '✅' : '•'} ${check.label}`;
+                    this.workflowChecklist.appendChild(item);
+                });
+
+                const next = checks.find((check) => !check.ready);
+                this.workflowNextStep.textContent = next
+                    ? `Next step: ${next.nextStep}`
+                    : 'Next step: all set — generate, test, or enhance as needed.';
+            }
+
+            getWorkflowChecks() {
+                const hasPrompt = this.currentPrompt.length > 0;
+                const aiReady = this.isAIReady();
+                const hasStory = this.storyInput.value.trim().length > 0;
+
+                return [
+                    {
+                        label: hasPrompt ? 'Prompt generated.' : 'Prompt not generated yet.',
+                        ready: hasPrompt,
+                        nextStep: 'generate your prompt in Story Configuration.'
+                    },
+                    {
+                        label: aiReady ? 'AI provider configured.' : this.getAIRequirementText(),
+                        ready: aiReady,
+                        nextStep: 'configure an AI provider in AI Testing Hub.'
+                    },
+                    {
+                        label: hasStory ? 'Story text available for story tools.' : 'Story text missing for story tools.',
+                        ready: hasStory,
+                        nextStep: 'add story text if you want to use story extension/fix.'
+                    }
+                ];
             }
 
             getTestPromptHelperText() {
@@ -2366,21 +2544,41 @@ Return only the improved prompt, formatted clearly.`;
                     this.improvePromptBtn.innerHTML = '⚡ Improve Prompt';
                 }
             }
-
             showPromptComparison(original, improved) {
-                this.promptEnhancementResult.innerHTML = `
-                    <div class="comparison-container">
-                        <div class="comparison-panel">
-                            <div class="comparison-header">Original Prompt</div>
-                            <div class="comparison-content">${original.substring(0, 500)}...</div>
-                        </div>
-                        <div class="comparison-panel">
-                            <div class="comparison-header">Improved Prompt</div>
-                            <div class="comparison-content">${improved.substring(0, 500)}...</div>
-                        </div>
-                    </div>
-                    <button class="btn btn-success" onclick="app.useImprovedPrompt(\`${improved.replace(/`/g, '\\`')}\`)" style="margin-top: var(--spacing-md);">Use Improved Prompt</button>
-                `;
+                this.promptEnhancementResult.textContent = '';
+
+                const comparisonContainer = document.createElement('div');
+                comparisonContainer.className = 'comparison-container';
+
+                const originalPanel = document.createElement('div');
+                originalPanel.className = 'comparison-panel';
+                const originalHeader = document.createElement('div');
+                originalHeader.className = 'comparison-header';
+                originalHeader.textContent = 'Original Prompt';
+                const originalContent = document.createElement('div');
+                originalContent.className = 'comparison-content';
+                originalContent.textContent = `${original.substring(0, 500)}...`;
+                originalPanel.append(originalHeader, originalContent);
+
+                const improvedPanel = document.createElement('div');
+                improvedPanel.className = 'comparison-panel';
+                const improvedHeader = document.createElement('div');
+                improvedHeader.className = 'comparison-header';
+                improvedHeader.textContent = 'Improved Prompt';
+                const improvedContent = document.createElement('div');
+                improvedContent.className = 'comparison-content';
+                improvedContent.textContent = `${improved.substring(0, 500)}...`;
+                improvedPanel.append(improvedHeader, improvedContent);
+
+                comparisonContainer.append(originalPanel, improvedPanel);
+
+                const applyButton = document.createElement('button');
+                applyButton.className = 'btn btn-success';
+                applyButton.style.marginTop = 'var(--spacing-md)';
+                applyButton.textContent = 'Use Improved Prompt';
+                applyButton.addEventListener('click', () => this.useImprovedPrompt(improved));
+
+                this.promptEnhancementResult.append(comparisonContainer, applyButton);
             }
 
             useImprovedPrompt(improvedPrompt) {
@@ -2388,7 +2586,16 @@ Return only the improved prompt, formatted clearly.`;
                 this.output.textContent = improvedPrompt;
                 this.copyBtn.style.display = 'block';
                 this.enhanceBtn.style.display = 'block';
-                this.promptEnhancementResult.innerHTML = '<div class="message message-success"><div class="message-icon">✓</div><div>Improved prompt has been applied!</div></div>';
+
+                const message = document.createElement('div');
+                message.className = 'message message-success';
+                message.innerHTML = '<div class="message-icon">✓</div><div>Improved prompt has been applied!</div>';
+                this.promptEnhancementResult.textContent = '';
+                this.promptEnhancementResult.appendChild(message);
+
+                this.output.setAttribute('tabindex', '-1');
+                this.output.focus();
+                this.updateEnhancementButtons();
             }
 
             async extendStory() {
@@ -2943,29 +3150,9 @@ Remember: Great stories are rewritten, not just written. Plan for multiple draft
             }
         }
 
-        // Global function for API key visibility toggle
-        window.toggleApiKeyVisibility = function(inputId) {
-            const input = document.getElementById(inputId);
-            const button = input.nextElementSibling;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.textContent = '🙈';
-                button.setAttribute('aria-label', 'Hide API key');
-            } else {
-                input.type = 'password';
-                button.textContent = '👁️';
-                button.setAttribute('aria-label', 'Show API key');
-            }
-        };
-
-        // Global app instance for enhanced prompt functionality
-        let app;
-
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
-            app = new StoryPromptBuilderEnhancedUX();
-            window.app = app; // Make available globally for enhanced prompt features
+            new StoryPromptBuilderEnhancedUX();
         });
     </script>
 </body>
