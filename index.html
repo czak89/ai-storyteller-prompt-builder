@@ -1164,12 +1164,82 @@
         .status-dot {
             transition: none !important;
         }
+    
+        /* UX V2 styles */
+        .v2-active .panel-v2-nav { display:block !important; }
+        .v2-active .panels-grid { grid-template-columns: 280px minmax(420px,1.2fr) minmax(380px,1fr); align-items:start; }
+        .v2-active #configPanel { grid-column:2; }
+        .v2-active #outputPanel { grid-column:3; }
+        .v2-active #aiPanel { grid-column:3; }
+        .v2-stepper { display:grid; gap:var(--spacing-sm); margin-bottom:var(--spacing-md); }
+        .v2-step { padding: .5rem .65rem; border:1px solid var(--border-light); border-radius: var(--radius-md); font-size:.875rem; }
+        .v2-step.is-active { border-color: var(--primary-color); background: color-mix(in oklab, var(--primary-color) 12%, transparent); }
+        .v2-hidden { display:none !important; }
+        .form-group.is-dim { opacity:.35; }
+        .mobile-v2-tabs { display:none; gap: var(--spacing-sm); margin-bottom: var(--spacing-md); }
+        .mobile-v2-tabs .btn { flex:1; }
+        @media (max-width: 1024px) {
+            .v2-active .panels-grid { grid-template-columns: 1fr; }
+            .v2-active #configPanel, .v2-active #outputPanel, .v2-active #aiPanel, .v2-active #v2FlowNav { grid-column:auto; }
+            .mobile-v2-tabs { display:flex; }
+        }
+
+
+        .v2-active .panel {
+            border: 1px solid color-mix(in oklab, var(--primary-color) 22%, var(--border-light));
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+        }
+        .v2-active .panel-header {
+            border-bottom: 1px solid color-mix(in oklab, var(--primary-color) 18%, var(--border-light));
+            background: linear-gradient(180deg, color-mix(in oklab, var(--primary-color) 8%, transparent), transparent);
+        }
+        .v2-active #v2FlowNav {
+            position: sticky;
+            top: var(--spacing-lg);
+        }
+        .v2-active #promptForm {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+        .v2-active #promptForm .form-group {
+            background: color-mix(in oklab, var(--bg-secondary) 78%, transparent);
+            border: 1px solid color-mix(in oklab, var(--primary-color) 12%, var(--border-light));
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+        }
+        .v2-section-heading {
+            font-size: 0.78rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 0 .2rem;
+            margin-top: .2rem;
+        }
+        .v2-active .content-actions, .v2-active .export-actions {
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+        .v2-active .mobile-v2-tabs .btn.is-active {
+            border-color: var(--primary-color);
+            background: color-mix(in oklab, var(--primary-color) 16%, transparent);
+            color: var(--text-primary);
+        }
+        .v2-active .v2-step {
+            background: color-mix(in oklab, var(--bg-secondary) 70%, transparent);
+        }
+        .v2-active .v2-step.is-active {
+            box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary-color) 45%, transparent);
+        }
+
     </style>
 </head>
 <body>
     <div class="app-container">
         <header class="header">
             <div class="header-controls">
+                <button class="theme-toggle" id="v2Toggle" aria-label="Toggle UI version">UI: V1</button>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                     <span class="theme-icon sun">☀️</span>
                     <span class="theme-icon moon" style="display: none;">🌙</span>
@@ -1190,9 +1260,47 @@
                 </div>
                 <ul class="workflow-checklist" id="workflowChecklist"></ul>
             </section>
+            <div class="mobile-v2-tabs" id="mobileV2Tabs" style="display:none;">
+                <button class="btn btn-outline btn-sm" data-v2tab="config">Editor</button>
+                <button class="btn btn-outline btn-sm" data-v2tab="nav">Settings</button>
+                <button class="btn btn-outline btn-sm" data-v2tab="preview">Preview</button>
+            </div>
             <div class="panels-grid">
+                <aside class="panel panel-v2-nav fade-in" id="v2FlowNav" style="display:none;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">🧭 Flow steps</h2>
+                        <p class="panel-subtitle">Choose a workflow and preset</p>
+                    </div>
+                    <div class="panel-content">
+                        <div class="v2-stepper" id="v2Stepper"></div>
+                        <div class="form-group">
+                            <label class="form-label" for="v2FlowMode">Workflow mode</label>
+                            <select id="v2FlowMode" class="form-select">
+                                <option value="quick">Quick Start</option>
+                                <option value="preset">Preset-driven</option>
+                                <option value="power">Power user</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="v2PresetSearch">Preset Picker</label>
+                            <input id="v2PresetSearch" class="form-input" placeholder="Search endpoint presets..."/>
+                            <div class="preset-grid" id="v2PresetPicker"></div>
+                            <div class="code-output" id="v2PresetDiff" style="margin-top: var(--spacing-sm); display:none;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="v2SettingsSearch">SettingsSearch</label>
+                            <input id="v2SettingsSearch" class="form-input" placeholder="Search settings (label/id)..."/>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="v2AdvancedToggle">
+                                <span>Advanced mode</span>
+                            </label>
+                        </div>
+                    </div>
+                </aside>
                 <!-- Story Configuration Panel -->
-                <div class="panel fade-in">
+                <div class="panel fade-in" id="configPanel">
                     <div class="panel-header">
                         <div class="feature-badge">
                             <span class="feature-badge-icon">⚙️</span>
@@ -1205,6 +1313,7 @@
                     </div>
                     <div class="panel-content">
                         <form id="promptForm">
+                            <div class="v2-section-heading">Core Story Setup</div>
                             <div class="form-group">
                                 <label for="genre" class="form-label">Story Genre</label>
                                 <select id="genre" name="genre" class="form-select">
@@ -1280,6 +1389,7 @@
                                 </select>
                             </div>
 
+                            <div class="v2-section-heading">Narrative Focus</div>
                             <div class="form-group">
                                 <label for="theme" class="form-label">Central Theme</label>
                                 <select id="theme" name="theme" class="form-select">
@@ -1309,6 +1419,7 @@
                                 <input type="text" id="customTheme" name="customTheme" placeholder="Or enter custom theme..." class="form-input" style="margin-top: var(--spacing-sm); display: none;">
                             </div>
 
+                            <div class="v2-section-heading">Writing Depth Controls</div>
                             <div class="form-group">
                                 <label class="form-label">Advanced Features</label>
                                 <div class="checkbox-grid">
@@ -1350,12 +1461,13 @@
                             <button type="submit" class="btn btn-primary btn-lg">
                                 🚀 Generate Expert Prompt
                             </button>
+                        <div id="v2InlineValidation" class="message info" style="display:none; margin-top: var(--spacing-sm);"></div>
                         </form>
                     </div>
                 </div>
                 
                 <!-- Generated Prompt Panel -->
-                <div class="panel fade-in">
+                <div class="panel fade-in" id="outputPanel">
                     <div class="panel-header">
                         <div class="feature-badge">
                             <span class="feature-badge-icon">✨</span>
@@ -1379,6 +1491,12 @@
                                     </button>
                                 </div>
                             </div>
+                            <div class="export-actions" id="v2ExportActions" style="display:none; margin-bottom: var(--spacing-sm);">
+                                <button class="btn btn-secondary btn-sm" id="downloadTxtBtn" type="button">⬇️ TXT</button>
+                                <button class="btn btn-secondary btn-sm" id="downloadJsonBtn" type="button">⬇️ JSON</button>
+                                <button class="btn btn-outline btn-sm" id="resetFeaturesBtn" type="button">♻️ Reset features</button>
+                                <button class="btn btn-outline btn-sm" id="undoResetBtn" type="button" disabled>↩️ Undo</button>
+                            </div>
                             <div class="code-output" id="promptOutput">
                                 <div class="placeholder">
                                     <div class="placeholder-icon">📝</div>
@@ -1393,7 +1511,7 @@
                 </div>
 
                 <!-- AI Testing Panel -->
-                <div class="panel fade-in">
+                <div class="panel fade-in" id="aiPanel">
                     <div class="panel-header">
                         <div class="feature-badge">
                             <span class="feature-badge-icon">🧠</span>
@@ -3150,9 +3268,257 @@ Remember: Great stories are rewritten, not just written. Plan for multiple draft
             }
         }
 
+        class UXV2Controller {
+            constructor(app) {
+                this.app = app;
+                this.isV2 = window.location.hash === '#/v2' || new URLSearchParams(window.location.search).get('ui') === 'v2';
+                this.undoState = null;
+                this.lastPresetDiff = '';
+                this.cacheElements();
+                this.bind();
+                this.syncRouteUI();
+            }
+
+            cacheElements() {
+                this.v2Toggle = document.getElementById('v2Toggle');
+                this.v2Nav = document.getElementById('v2FlowNav');
+                this.flowMode = document.getElementById('v2FlowMode');
+                this.settingsSearch = document.getElementById('v2SettingsSearch');
+                this.presetSearch = document.getElementById('v2PresetSearch');
+                this.presetPicker = document.getElementById('v2PresetPicker');
+                this.presetDiff = document.getElementById('v2PresetDiff');
+                this.advancedToggle = document.getElementById('v2AdvancedToggle');
+                this.inlineValidation = document.getElementById('v2InlineValidation');
+                this.stepper = document.getElementById('v2Stepper');
+                this.exportActions = document.getElementById('v2ExportActions');
+                this.downloadTxtBtn = document.getElementById('downloadTxtBtn');
+                this.downloadJsonBtn = document.getElementById('downloadJsonBtn');
+                this.resetFeaturesBtn = document.getElementById('resetFeaturesBtn');
+                this.undoResetBtn = document.getElementById('undoResetBtn');
+                this.mobileTabs = document.getElementById('mobileV2Tabs');
+            }
+
+            bind() {
+                if (this.v2Toggle) {
+                    this.v2Toggle.addEventListener('click', () => {
+                        this.isV2 = !this.isV2;
+                        if (this.isV2) window.location.hash = '/v2';
+                        else if (window.location.hash === '#/v2') window.location.hash = '';
+                        this.syncRouteUI();
+                    });
+                }
+                if (this.flowMode) this.flowMode.addEventListener('change', () => this.applyFlowMode());
+                if (this.settingsSearch) this.settingsSearch.addEventListener('input', () => this.filterSettings());
+                if (this.presetSearch) this.presetSearch.addEventListener('input', () => this.renderPresetPicker());
+                if (this.advancedToggle) this.advancedToggle.addEventListener('change', () => this.applyAdvancedToggle());
+                if (this.app.form) this.app.form.addEventListener('submit', () => setTimeout(() => this.validateInline(), 0));
+                if (this.downloadTxtBtn) this.downloadTxtBtn.addEventListener('click', () => this.exportPrompt('txt'));
+                if (this.downloadJsonBtn) this.downloadJsonBtn.addEventListener('click', () => this.exportPrompt('json'));
+                if (this.resetFeaturesBtn) this.resetFeaturesBtn.addEventListener('click', () => this.resetFeatures());
+                if (this.undoResetBtn) this.undoResetBtn.addEventListener('click', () => this.undoReset());
+                if (this.mobileTabs) {
+                    this.mobileTabs.querySelectorAll('[data-v2tab]').forEach((btn) => btn.addEventListener('click', () => this.switchMobileTab(btn.dataset.v2tab)));
+                }
+                window.addEventListener('resize', () => this.handleViewportChange());
+                window.addEventListener('hashchange', () => {
+                    this.isV2 = window.location.hash === '#/v2' || new URLSearchParams(window.location.search).get('ui') === 'v2';
+                    this.syncRouteUI();
+                });
+            }
+
+            syncRouteUI() {
+                document.body.classList.toggle('v2-active', this.isV2);
+                if (this.v2Toggle) this.v2Toggle.textContent = this.isV2 ? 'UI: V2' : 'UI: V1';
+                if (this.mobileTabs) this.mobileTabs.style.display = this.isV2 ? 'flex' : 'none';
+                if (this.isV2 && this.mobileTabs && !this.mobileTabs.querySelector('[data-v2tab].is-active')) {
+                    const defaultBtn = this.mobileTabs.querySelector('[data-v2tab="config"]');
+                    if (defaultBtn) defaultBtn.classList.add('is-active');
+                }
+                if (!this.isV2) {
+                    this.resetPanelVisibility();
+                    if (this.exportActions) this.exportActions.style.display = 'none';
+                    return;
+                }
+                this.resetPanelVisibility();
+                this.renderStepper('quick');
+                this.renderPresetPicker();
+                this.applyFlowMode();
+                this.applyAdvancedToggle();
+                this.validateInline();
+                if (this.exportActions) this.exportActions.style.display = 'block';
+                this.handleViewportChange();
+            }
+
+            renderStepper(mode='quick') {
+                if (!this.stepper) return;
+                const steps = {
+                    quick: ['1. Choose genre and format','2. Fill key fields','3. Generate and copy/export'],
+                    preset: ['1. Choose a preset','2. Adjust important parameters','3. Review changes and generate'],
+                    power: ['1. Advanced + search','2. Edit full configuration','3. Test, export, reset/undo']
+                };
+                this.stepper.innerHTML = steps[mode].map((s, idx)=>`<div class="v2-step ${idx===0?'is-active':''}">${s}</div>`).join('');
+            }
+
+            applyFlowMode() {
+                if (!this.flowMode) return;
+                const mode = this.flowMode.value;
+                this.renderStepper(mode);
+                if (mode === 'quick') {
+                    this.advancedToggle.checked = false;
+                    this.applyAdvancedToggle();
+                }
+                if (mode === 'power') {
+                    this.advancedToggle.checked = true;
+                    this.applyAdvancedToggle();
+                }
+            }
+
+            applyAdvancedToggle() {
+                const advanced = this.advancedToggle && this.advancedToggle.checked;
+                const ids = ['theme','customTheme','plotTwists','settings','dialogue','pacing','characters','worldbuilding','symbolism','conflict'];
+                ids.forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const group = el.closest('.form-group') || el.closest('.checkbox-item');
+                    if (group && ['theme','customTheme'].includes(id) === false) {
+                        group.classList.toggle('v2-hidden', !advanced && group.classList.contains('checkbox-item'));
+                    }
+                });
+            }
+
+            filterSettings() {
+                const q = (this.settingsSearch.value || '').toLowerCase().trim();
+                document.querySelectorAll('#promptForm .form-group').forEach((group) => {
+                    const text = group.textContent.toLowerCase();
+                    group.classList.toggle('is-dim', !!q && !text.includes(q));
+                });
+            }
+
+            renderPresetPicker() {
+                if (!this.presetPicker || !this.app.presets) return;
+                const q = (this.presetSearch.value || '').toLowerCase().trim();
+                const entries = Object.entries(this.app.presets).filter(([k,v]) => `${k} ${v.name}`.toLowerCase().includes(q));
+                this.presetPicker.innerHTML = entries.map(([key, value]) => `<button class="preset-btn" data-v2preset="${key}" title="${value.baseUrl}">${value.name}</button>`).join('');
+                this.presetPicker.querySelectorAll('[data-v2preset]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const before = { baseUrl: this.app.customEndpoint.value, apiKey: this.app.customKey.value };
+                        this.app.applyPreset(btn.dataset.v2preset);
+                        const after = { baseUrl: this.app.customEndpoint.value, apiKey: this.app.customKey.value };
+                        this.lastPresetDiff = `Preset diff
+- baseUrl: ${before.baseUrl || '(empty)'} -> ${after.baseUrl || '(empty)'}
+- apiKey: ${before.apiKey ? '***' : '(empty)'} -> ${after.apiKey ? '***' : '(empty)'}`;
+                        this.presetDiff.style.display = 'block';
+                        this.presetDiff.textContent = this.lastPresetDiff;
+                    });
+                });
+            }
+
+            validateInline() {
+                if (!this.inlineValidation) return;
+                const req = ['genre','length','perspective','tone'];
+                const missing = req.filter((id) => !document.getElementById(id)?.value);
+                if (missing.length) {
+                    this.inlineValidation.style.display = 'block';
+                    this.inlineValidation.textContent = `Please complete required fields: ${missing.join(', ')}.`;
+                    this.inlineValidation.className = 'message error';
+                } else {
+                    this.inlineValidation.style.display = 'block';
+                    this.inlineValidation.textContent = 'Form looks good — you can generate a prompt.';
+                    this.inlineValidation.className = 'message success';
+                }
+            }
+
+            exportPrompt(type) {
+                const content = (this.app.output?.textContent || '').trim();
+                if (!content || content.includes('Generated prompt will appear here')) {
+                    this.app.showMessage('warning', 'Generate a prompt before exporting.');
+                    return;
+                }
+                let blob;
+                let filename;
+                if (type === 'json') {
+                    blob = new Blob([JSON.stringify({ prompt: content, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+                    filename = 'prompt-export.json';
+                } else {
+                    blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    filename = 'prompt-export.txt';
+                }
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(a.href);
+                this.app.showMessage('success', `Exported ${filename}`);
+            }
+
+            resetFeatures() {
+                const checks = Array.from(document.querySelectorAll('input[name="features"]'));
+                this.undoState = checks.map((c) => ({ id: c.id, checked: c.checked }));
+                checks.forEach((c) => { c.checked = false; });
+                if (this.undoResetBtn) this.undoResetBtn.disabled = false;
+                this.app.showMessage('warning', 'Writing Features section was reset. You can use Undo.');
+            }
+
+            undoReset() {
+                if (!this.undoState) return;
+                this.undoState.forEach((item) => {
+                    const el = document.getElementById(item.id);
+                    if (el) el.checked = item.checked;
+                });
+                this.undoState = null;
+                this.undoResetBtn.disabled = true;
+                this.app.showMessage('success', 'Last section reset restored.');
+            }
+
+
+
+            resetPanelVisibility() {
+                ['v2FlowNav','configPanel','outputPanel','aiPanel'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = '';
+                });
+            }
+
+            handleViewportChange() {
+                if (!this.isV2) {
+                    this.resetPanelVisibility();
+                    return;
+                }
+                if (window.innerWidth > 1024) {
+                    this.resetPanelVisibility();
+                    return;
+                }
+                const visibleTab = this.mobileTabs?.querySelector('[data-v2tab].is-active')?.dataset?.v2tab || 'config';
+                this.switchMobileTab(visibleTab);
+            }
+
+            switchMobileTab(tab) {
+                if (!this.isV2 || window.innerWidth > 1024) return;
+                this.mobileTabs?.querySelectorAll('[data-v2tab]').forEach((btn)=>btn.classList.toggle('is-active', btn.dataset.v2tab === tab));
+                const map = {
+                    nav: ['v2FlowNav'],
+                    config: ['configPanel'],
+                    preview: ['outputPanel','aiPanel']
+                };
+                ['v2FlowNav','configPanel','outputPanel','aiPanel'].forEach((id)=>{
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.style.display = map[tab].includes(id) ? 'block' : 'none';
+                });
+            }
+        }
+
+        window.UXV2Controller = UXV2Controller;
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
-            new StoryPromptBuilderEnhancedUX();
+            const app = new StoryPromptBuilderEnhancedUX();
+            window.storyPromptBuilderApp = app;
+            if (window.UXV2Controller) {
+                new window.UXV2Controller(app);
+            }
         });
     </script>
 </body>
